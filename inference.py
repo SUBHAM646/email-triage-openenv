@@ -6,10 +6,9 @@ from app.models import Action
 
 print("[START]")
 
-# ✅ IMPORTANT: use their proxy
 client = OpenAI(
-    api_key=os.environ["API_KEY"],
-    base_url=os.environ["API_BASE_URL"]
+    api_key=os.environ.get("API_KEY"),
+    base_url=os.environ.get("API_BASE_URL")
 )
 
 env = EmailEnv()
@@ -19,33 +18,29 @@ for task in TASKS:
 
     obs = env.reset()
 
-    # ✅ LLM CALL (IMPORTANT)
-    prompt = f"""
-    Classify this email:
-    Subject: {obs.subject}
-    Sender: {obs.sender}
-    Body: {obs.email_text}
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",   # ✅ SAFE MODEL
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Classify email: {obs.subject}"
+                }
+            ],
+            max_tokens=50
+        )
 
-    Return JSON:
-    {{
-      "category": "spam/urgent/normal",
-      "priority": 1-3,
-      "route": "support/hr/sales/none"
-    }}
-    """
+        result = response.choices[0].message.content
+        print("[DEBUG] LLM Response:", result)
 
-    response = client.chat.completions.create(
-        model=os.environ["MODEL_NAME"],
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
-    )
+    except Exception as e:
+        print("[ERROR]", e)
+        result = "normal"
 
-    result = response.choices[0].message.content
-
-    # simple fallback parsing
-    if "spam" in result:
+    # fallback logic
+    if "spam" in result.lower():
         action = Action(category="spam", priority=3, route="none")
-    elif "urgent" in result:
+    elif "urgent" in result.lower():
         action = Action(category="urgent", priority=1, route="support")
     else:
         action = Action(category="normal", priority=2, route="hr")
