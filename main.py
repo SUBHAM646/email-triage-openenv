@@ -6,6 +6,11 @@ app = FastAPI()
 
 env = EmailEnv()
 
+# ✅ ROOT (ADD THIS)
+@app.get("/")
+def home():
+    return {"message": "Email Triage API Running 🚀"}
+
 # ✅ RESET
 @app.post("/reset")
 def reset():
