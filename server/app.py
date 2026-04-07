@@ -20,3 +20,11 @@ def step(action_dict):
 def state():
     obs = env.state()
     return obs.dict()
+
+# ✅ IMPORTANT: REQUIRED MAIN FUNCTION
+def main():
+    print("OpenEnv Email Triage Environment Running")
+
+# ✅ REQUIRED ENTRY POINT
+if __name__ == "__main__":
+    main()
