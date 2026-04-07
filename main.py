@@ -4,11 +4,6 @@ from fastapi import FastAPI
 from app.env import EmailEnv
 from app.models import Action
 
-client = OpenAI(
-    api_key=os.environ.get("API_KEY"),
-    base_url=os.environ.get("API_BASE_URL")
-)
-
 app = FastAPI()
 
 env = EmailEnv()
@@ -27,6 +22,12 @@ def reset():
 # ✅ STEP
 @app.post("/step")
 def step(action: Action):
+
+    client = OpenAI(
+        api_key=os.environ.get("API_KEY"),
+        base_url=os.environ.get("API_BASE_URL")
+    )
+
     obs = env.state()
 
     try:
