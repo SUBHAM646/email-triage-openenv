@@ -2,14 +2,17 @@
 name = "email-triage-openenv"
 version = "0.1.0"
 description = "Email triage OpenEnv environment"
-authors = [
-  { name="Biswajit", email="biswajitputel08@gmail.com" }
-]
+authors = [{ name="Biswajit" }]
+
 dependencies = [
   "pydantic",
   "fastapi",
-  "uvicorn"
+  "uvicorn",
+  "openenv-core>=0.2.0"
 ]
+
+[project.scripts]
+server = "server.app:reset"
 
 [build-system]
 requires = ["setuptools", "wheel"]
