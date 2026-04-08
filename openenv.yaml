@@ -8,18 +8,18 @@ tasks:
     max_steps: 10
     grader:
       type: llm
-      prompt_template: "Score the agent's email classification performance 0.0 to 1.0 based on accuracy..."
+      prompt_template: "Score the classification strictly between 0.1 and 0.9 based on accuracy. Never return 0 or 1."
 
   - id: medium
     difficulty: medium
     max_steps: 15
     grader:
       type: llm
-      prompt_template: "Score the agent's email intent detection performance 0.0 to 1.0 based on accuracy..."
+      prompt_template: "Score the intent detection strictly between 0.1 and 0.9 based on accuracy. Never return 0 or 1."
 
   - id: hard
     difficulty: hard
     max_steps: 20
     grader:
       type: llm
-      prompt_template: "Score the agent's email reply drafting performance 0.0 to 1.0 based on quality..."
+      prompt_template: "Score the response quality strictly between 0.1 and 0.9 based on quality. Never return 0 or 1."

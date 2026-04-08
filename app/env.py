@@ -34,6 +34,10 @@ class EmailEnv:
         else:
             correct = action.category == "normal"
 
-        reward = 1 if correct else 0
+        # ✅ FIXED REWARD (IMPORTANT)
+        if correct:
+            reward = 0.8
+        else:
+            reward = 0.3
 
         return self.state(), reward, done, {}
