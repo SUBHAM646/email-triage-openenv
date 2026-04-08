@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from openai import OpenAI
 from app.env import EmailEnv
 from app.models import Action
+from typing import Dict
 
 app = FastAPI()
 env = EmailEnv()
@@ -20,7 +21,9 @@ def reset():
 
 # ✅ STEP (FIXED)
 @app.post("/step")
-def step(action: Action):
+def step(action: Dict):
+
+    action = Action(**action)  # Convert dict to Action model
 
     obs = env.state()
     result = "normal"  # fallback
