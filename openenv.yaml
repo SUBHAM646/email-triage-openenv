@@ -1,7 +1,25 @@
-name: email-triage-env
-description: Email classification environment
+env_id: email-triage-env
+version: "1.0.0"
+description: "Email classification environment"
 
 tasks:
-  - easy
-  - medium
-  - hard
+  - id: easy
+    difficulty: easy
+    max_steps: 10
+    grader:
+      type: llm
+      prompt_template: "Score the agent's email classification performance 0.0 to 1.0 based on accuracy..."
+
+  - id: medium
+    difficulty: medium
+    max_steps: 15
+    grader:
+      type: llm
+      prompt_template: "Score the agent's email intent detection performance 0.0 to 1.0 based on accuracy..."
+
+  - id: hard
+    difficulty: hard
+    max_steps: 20
+    grader:
+      type: llm
+      prompt_template: "Score the agent's email reply drafting performance 0.0 to 1.0 based on quality..."
