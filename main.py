@@ -22,60 +22,50 @@ def reset():
 # ✅ STEP (FIXED)
 @app.post("/step")
 def step(action: Dict):
-
-    action = Action(**action)  # Convert dict to Action model
-
-    # SAFE OBS FETCH
-    result = "normal"  # fallback
     try:
-        obs = env.state()
-    except:
-        obs = env.reset()
+        action = Action(**action)
 
+        result = "normal"
 
-    try:
-        api_key = os.environ.get("API_KEY")
-        base_url = os.environ.get("API_BASE_URL")
+        try:
+            obs = env.state()
+        except:
+            obs = env.reset()
 
-        if api_key and base_url:
-            client = OpenAI(
-                api_key=api_key,
-                base_url=base_url
-            )
+        try:
+            api_key = os.environ.get("API_KEY")
+            base_url = os.environ.get("API_BASE_URL")
 
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "user", "content": f"Classify email: {obs.subject}"}
-                ],
-                max_tokens=50
-            )
+            if api_key and base_url:
+                client = OpenAI(
+                    api_key=api_key,
+                    base_url=base_url
+                )
 
-            result = response.choices[0].message.content
-            print("[DEBUG] LLM Response:", result)
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "user", "content": f"Classify email: {obs.subject}"}
+                    ],
+                    max_tokens=50
+                )
 
-        else:
-            print("[DEBUG] No API key found, using fallback")
+                result = response.choices[0].message.content
+
+        except Exception as e:
+            return {"error": f"LLM Error: {str(e)}"}
+
+        obs, reward, done, info = env.step(action)
+
+        return {
+            "observation": obs.dict(),
+            "reward": reward,
+            "done": done,
+            "info": info
+        }
 
     except Exception as e:
-        print("[ERROR]", e)
-
-    # fallback logic
-    if "spam" in result.lower():
-        action = Action(category="spam", priority=3, route="none")
-    elif "urgent" in result.lower():
-        action = Action(category="urgent", priority=1, route="support")
-    else:
-        action = Action(category="normal", priority=2, route="hr")
-
-    obs, reward, done, info = env.step(action)
-
-    return {
-        "observation": obs.dict(),
-        "reward": reward,
-        "done": done,
-        "info": info
-    }
+        return {"error": f"Main Error: {str(e)}"}
 
 # ✅ STATE
 @app.get("/state")
