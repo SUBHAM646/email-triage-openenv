@@ -4,27 +4,12 @@ version: "1.0.0"
 tasks:
   - id: easy
     grader:
-      type: llm
-      prompt_template: |
-        You are a strict grader.
-        Return ONLY a number between 0.1 and 0.9.
-        Do NOT return any text.
-        Only output the number.
+      type: rule
 
   - id: medium
     grader:
-      type: llm
-      prompt_template: |
-        You are a strict grader.
-        Return ONLY a number between 0.1 and 0.9.
-        Do NOT return any text.
-        Only output the number.
+      type: rule
 
   - id: hard
     grader:
-      type: llm
-      prompt_template: |
-        You are a strict grader.
-        Return ONLY a number between 0.1 and 0.9.
-        Do NOT return any text.
-        Only output the number.
+      type: rule
