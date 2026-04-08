@@ -6,38 +6,42 @@ from app.models import Action
 
 print("[START]")
 
-client = OpenAI(
-    api_key=os.environ.get("API_KEY"),
-    base_url=os.environ.get("API_BASE_URL")
-)
-
 env = EmailEnv()
 
 for task in TASKS:
     print(f"[STEP] Task: {task['name']}")
 
     obs = env.reset()
+    result = "normal"
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",   # ✅ SAFE MODEL
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Classify email: {obs.subject}"
-                }
-            ],
-            max_tokens=50
-        )
+        api_key = os.environ.get("API_KEY")
+        base_url = os.environ.get("API_BASE_URL")
 
-        result = response.choices[0].message.content
-        print("[DEBUG] LLM Response:", result)
+        if api_key and base_url:
+            client = OpenAI(
+                api_key=api_key,
+                base_url=base_url
+            )
+
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "user", "content": f"Classify email: {obs.subject}"}
+                ],
+                max_tokens=50
+            )
+
+            result = response.choices[0].message.content
+            print("[DEBUG] LLM Response:", result)
+
+        else:
+            print("[DEBUG] No API key found, fallback mode")
 
     except Exception as e:
         print("[ERROR]", e)
-        result = "normal"
 
-    # fallback logic
+    # fallback
     if "spam" in result.lower():
         action = Action(category="spam", priority=3, route="none")
     elif "urgent" in result.lower():

@@ -1,14 +1,13 @@
 import os
-from openai import OpenAI
 from fastapi import FastAPI
+from openai import OpenAI
 from app.env import EmailEnv
 from app.models import Action
 
 app = FastAPI()
-
 env = EmailEnv()
 
-# ✅ ROOT (ADD THIS)
+# ✅ ROOT
 @app.get("/")
 def home():
     return {"message": "Email Triage API Running 🚀"}
@@ -19,35 +18,39 @@ def reset():
     obs = env.reset()
     return obs.dict()
 
-# ✅ STEP
+# ✅ STEP (FIXED)
 @app.post("/step")
 def step(action: Action):
 
-    client = OpenAI(
-        api_key=os.environ.get("API_KEY"),
-        base_url=os.environ.get("API_BASE_URL")
-    )
-
     obs = env.state()
+    result = "normal"  # fallback
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Classify email: {obs.subject}"
-                }
-            ],
-            max_tokens=50
-        )
+        api_key = os.environ.get("API_KEY")
+        base_url = os.environ.get("API_BASE_URL")
 
-        result = response.choices[0].message.content
-        print("[DEBUG] LLM Response:", result)
+        if api_key and base_url:
+            client = OpenAI(
+                api_key=api_key,
+                base_url=base_url
+            )
+
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "user", "content": f"Classify email: {obs.subject}"}
+                ],
+                max_tokens=50
+            )
+
+            result = response.choices[0].message.content
+            print("[DEBUG] LLM Response:", result)
+
+        else:
+            print("[DEBUG] No API key found, using fallback")
 
     except Exception as e:
         print("[ERROR]", e)
-        result = "normal"
 
     # fallback logic
     if "spam" in result.lower():
@@ -69,5 +72,4 @@ def step(action: Action):
 # ✅ STATE
 @app.get("/state")
 def state():
-    obs = env.state()
-    return obs.dict()
+    return env.state().dict()
