@@ -11,8 +11,11 @@ class EmailEnv:
     def __init__(self):
         self.current_email = None
 
-    def reset(self):
-        self.current_email = random.choice(EMAILS)
+    def reset(self, index=None):
+        if index is not None:
+            self.current_email = EMAILS[index]
+        else:
+            self.current_email = random.choice(EMAILS)
         return self.state()
 
     def state(self):
@@ -36,8 +39,8 @@ class EmailEnv:
 
         # ✅ FIXED REWARD (IMPORTANT)
         if correct:
-            reward = 0.8
+            reward = 0.75
         else:
-            reward = 0.3
+            reward = 0.35
 
         return self.state(), reward, done, {}
