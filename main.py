@@ -25,8 +25,13 @@ def step(action: Dict):
 
     action = Action(**action)  # Convert dict to Action model
 
-    obs = env.state()
+    # SAFE OBS FETCH
     result = "normal"  # fallback
+    try:
+        obs = env.state()
+    except:
+        obs = env.reset()
+
 
     try:
         api_key = os.environ.get("API_KEY")
