@@ -1,25 +1,30 @@
 env_id: email-triage-env
 version: "1.0.0"
-description: "Email classification environment"
 
 tasks:
   - id: easy
-    difficulty: easy
-    max_steps: 10
     grader:
       type: llm
-      prompt_template: "Score the classification strictly between 0.1 and 0.9 based on accuracy. Never return 0 or 1."
+      prompt_template: |
+        You are a strict grader.
+        Return ONLY a number between 0.1 and 0.9.
+        Do NOT return any text.
+        Only output the number.
 
   - id: medium
-    difficulty: medium
-    max_steps: 15
     grader:
       type: llm
-      prompt_template: "Score the intent detection strictly between 0.1 and 0.9 based on accuracy. Never return 0 or 1."
+      prompt_template: |
+        You are a strict grader.
+        Return ONLY a number between 0.1 and 0.9.
+        Do NOT return any text.
+        Only output the number.
 
   - id: hard
-    difficulty: hard
-    max_steps: 20
     grader:
       type: llm
-      prompt_template: "Score the response quality strictly between 0.1 and 0.9 based on quality. Never return 0 or 1."
+      prompt_template: |
+        You are a strict grader.
+        Return ONLY a number between 0.1 and 0.9.
+        Do NOT return any text.
+        Only output the number.
