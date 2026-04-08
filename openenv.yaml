@@ -3,25 +3,13 @@ version: "1.0.0"
 
 tasks:
   - id: easy
-    description: "Classify a simple spam email"
     grader:
       type: rule
-      config:
-        score_correct: 0.75
-        score_incorrect: 0.25
 
   - id: medium
-    description: "Classify an urgent business email"
     grader:
       type: rule
-      config:
-        score_correct: 0.70
-        score_incorrect: 0.30
 
   - id: hard
-    description: "Classify a normal HR email with low urgency"
     grader:
       type: rule
-      config:
-        score_correct: 0.65
-        score_incorrect: 0.35

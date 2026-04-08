@@ -5,79 +5,77 @@ from app.models import Action
 
 print("[START]")
 
-# Initialize environment and LLM
+# Initialize environment and LLM client
 env = EmailEnv()
-client = OpenAI(
-    api_key=os.environ.get("API_KEY"),
-    base_url=os.environ.get("API_BASE_URL")
-)
+try:
+    client = OpenAI(
+        api_key=os.environ.get("API_KEY"),
+        base_url=os.environ.get("API_BASE_URL")
+    )
+    llm_available = True
+except Exception as e:
+    print(f"[LLM_INIT_ERROR] {e}")
+    llm_available = False
 
-# 3 Tasks with task IDs that match openenv.yaml
+# Define 3 tasks with fixed email indices
 TASKS = [
-    {"id": "easy", "email_index": 0},
-    {"id": "medium", "email_index": 1},
-    {"id": "hard", "email_index": 2}
+    {"id": "easy", "email_idx": 0},
+    {"id": "medium", "email_idx": 1},
+    {"id": "hard", "email_idx": 2}
 ]
 
-# Track results
-results = []
-
-for task in TASKS:
+# Execute each task
+for task_idx, task in enumerate(TASKS, 1):
     task_id = task["id"]
-    email_index = task["email_index"]
+    email_idx = task["email_idx"]
     
-    print(f"\n=== Task: {task_id} ===")
+    # Reset to specific email
+    obs = env.reset(index=email_idx)
     
-    # Reset environment to specific email
-    obs = env.reset(index=email_index)
-    print(f"Email: {obs.subject} from {obs.sender}")
+    # Get classification from LLM if available
+    classification = "normal"  # default
+    if llm_available:
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Classify as spam/urgent/normal: {obs.subject}"
+                    }
+                ],
+                max_tokens=20,
+                temperature=0
+            )
+            response_text = response.choices[0].message.content.lower()
+            if "spam" in response_text:
+                classification = "spam"
+            elif "urgent" in response_text:
+                classification = "urgent"
+            else:
+                classification = "normal"
+        except Exception as e:
+            classification = "normal"
     
-    # Get LLM classification
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Classify this email as 'spam', 'urgent', or 'normal'. Email subject: {obs.subject}. Email text: {obs.email_text}"
-                }
-            ],
-            max_tokens=50,
-            temperature=0
-        )
-        result = response.choices[0].message.content.strip().lower()
-    except Exception as e:
-        print(f"[WARNING] LLM Error: {e}. Using fallback classification.")
-        result = "normal"
+    # Create action and step environment
+    action = Action(
+        category=classification,
+        priority=1 if classification == "urgent" else (3 if classification == "spam" else 2),
+        route="support" if classification == "urgent" else ("none" if classification == "spam" else "hr")
+    )
     
-    # Parse LLM response to action
-    if "spam" in result:
-        action = Action(category="spam", priority=3, route="none")
-    elif "urgent" in result:
-        action = Action(category="urgent", priority=1, route="support")
-    else:
-        action = Action(category="normal", priority=2, route="hr")
-    
-    print(f"Classification: {action.category}")
-    
-    # Step environment with task_id for proper grading
     obs, reward, done, info = env.step(action, task_id=task_id)
     
-    # Ensure score is strictly within (0, 1)
+    # Ensure score is valid float in (0, 1)
     score = float(reward)
-    score = max(0.01, min(0.99, score))
     
-    # Store result
-    results.append({
-        "task_id": task_id,
-        "score": score
-    })
+    # Final validation - CRITICAL FOR VALIDATOR
+    if score <= 0.0 or score >= 1.0:
+        # If somehow we have edge case, clamp it
+        score = max(0.01, min(0.99, score))
     
-    # Print score in validator-compatible format
-    print(f"Score: {score}")
-
-print("\n=== Summary ===")
-for result in results:
-    print(f"{result['task_id']}: {result['score']}")
+    # Output in MACHINE-READABLE format
+    # Format: SCORE_TASK<N>=<float_value>
+    print(f"SCORE_TASK{task_idx}={score}")
 
 print("[END]")

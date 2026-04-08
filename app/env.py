@@ -10,12 +10,6 @@ EMAILS = [
 class EmailEnv:
     def __init__(self):
         self.current_email = None
-        # Deterministic grader scores - strictly between 0 and 1
-        self.grader_config = {
-            "easy": {"correct": 0.75, "incorrect": 0.25},
-            "medium": {"correct": 0.70, "incorrect": 0.30},
-            "hard": {"correct": 0.65, "incorrect": 0.35},
-        }
 
     def reset(self, index=None):
         if index is not None:
@@ -43,15 +37,30 @@ class EmailEnv:
         else:
             correct = action.category == "normal"
 
-        # Get score from grader config
-        if task_id and task_id in self.grader_config:
-            config = self.grader_config[task_id]
-            reward = config["correct"] if correct else config["incorrect"]
+        # Task-specific reward map (all strictly between 0 and 1)
+        task_rewards = {
+            "easy": {"correct": 0.75, "incorrect": 0.25},
+            "medium": {"correct": 0.70, "incorrect": 0.30},
+            "hard": {"correct": 0.65, "incorrect": 0.35}
+        }
+
+        # Get reward from task config
+        if task_id in task_rewards:
+            reward_config = task_rewards[task_id]
+            reward = reward_config["correct"] if correct else reward_config["incorrect"]
         else:
-            # Default fallback - but always use task_id in production
             reward = 0.70 if correct else 0.30
 
-        # Ensure reward is strictly between 0 and 1
-        reward = float(max(0.01, min(0.99, reward)))
+        # CRITICAL: Ensure strictly between 0 and 1 (not inclusive)
+        # Use explicit boundaries to prevent edge cases
+        reward = float(reward)
+        if reward <= 0.0:
+            reward = 0.01
+        if reward >= 1.0:
+            reward = 0.99
+        if reward < 0.01:
+            reward = 0.01
+        if reward > 0.99:
+            reward = 0.99
 
         return self.state(), reward, done, {}
